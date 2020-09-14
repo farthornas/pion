@@ -6,13 +6,14 @@ local t0, t1, t2 = 0, 0, 0
 local data, shipment = {}, nil
 local BUTTON = 3 -- Flash button on D3
 local DURATION_FOR_START, DURATION_SLEEP = 4000000, 60000000 -- 4 seconds, dsleep duration
+local TIMEOUT_DSLEEP = 5000 -- If not connected by this time - deep sleep
 gpio.mode(BUTTON, gpio.INT, gpio.PULLUP)
 local _, reset_reason = node.bootreason()
 local data_sent = 0
 
 wifi.sta.connect()
 print("Reset reason: "..reset_reason)
-if reset_reason ~= TEST then
+if reset_reason ~= DSLEEP then
     print("Unexpected reset reason: "..reset_reason)
     if file.exists("dsleepflag") then
         print("Removing deep sleep flag")
@@ -75,7 +76,7 @@ wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function(T)
     end
 end)
 
-local function wifi_sta_setup()
+function wifi_sta_setup()
     if wifi.sta.getip() ~= nil then
         -- if this is the case then should be ready to send data
         print("Wifi is connected to: "..wifi.sta.gethostname())
@@ -109,7 +110,7 @@ local function wifi_sta_setup()
 end
 
 function send_to_sleep()
-    tmr.create():alarm(5000, tmr.ALARM_SINGLE, function()
+    tmr.create():alarm(TIMEOUT_DSLEEP, tmr.ALARM_SINGLE, function()
         if data_sent ~= 1 and file.exists("dsleepflag") then
             print("Timeout on connecting to server")
             print("The data was not sent and will be lost...")
@@ -124,10 +125,10 @@ function send_to_sleep()
             file.flush()
             file.close()
         end
-        print("dsleep not activated")
-        print("now rebooting to simulate dsleep")
+        --print("dsleep not activated")
+        --print("now rebooting to simulate dsleep")
         wifi.sta.disconnect()
-        node.restart()
-        --node.dsleep(DURATION_SLEEP)
+        --node.restart()
+        node.dsleep(DURATION_SLEEP)
     end)
 end
