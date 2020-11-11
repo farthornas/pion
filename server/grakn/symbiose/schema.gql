@@ -1,0 +1,94 @@
+define
+
+  name sub attribute,
+    value string;
+  latin-name sub name;
+  local-name sub name;
+
+  family sub attribute,
+    value string;
+
+  event-date sub attribute,
+    abstract,
+    value datetime;
+  bloom-start-date sub event-date;
+  bloom-end-date sub event-date;
+  active-start-date sub event-date;
+  active-end-date sub event-date;
+
+  temperature sub attribute,
+    value double;
+  temperature-ideal sub temperature;
+  temperature-deviation sub temperature;
+
+  humidity sub attribute,
+    value double;
+  humidity-ideal sub humidity;
+  humidity-deviation sub humidity;
+
+
+  light sub attribute,
+    value double;
+  light-ideal sub light;
+  light-deviation sub light;
+
+  moisture sub attribute,
+    value double;
+  moisture-ideal sub moisture;
+  moisture-deviation sub moisture;
+
+  polination sub relation,
+    relates nectar,
+    relates polinator;
+
+  seeding sub relation,
+    relates seeder,
+    relates consumer;
+
+  food sub relation,
+    relates edible,
+    relates consumer;
+
+  competition sub relation,
+    relates competitor,
+    relates competed;
+
+
+  plant sub entity,
+    plays edible,
+    plays seeder,
+    plays nectar,
+    plays competitor,
+    plays competed,
+    has family,
+    has latin-name,
+    has local-name,
+    has temperature-ideal,
+    has temperature-deviation,
+    has humidity-ideal,
+    has humidity-deviation,
+    has light-ideal,
+    has light-deviation,
+    has moisture-ideal,
+    has moisture-deviation,
+    has active-start-date,
+    has active-end-date,
+    has bloom-start-date,
+    has bloom-end-date;
+
+  animal sub entity,
+    plays polinator,
+    plays consumer,
+    has family,
+    has latin-name,
+    has local-name,
+    has temperature-ideal,
+    has temperature-deviation,
+    has humidity-ideal,
+    has humidity-deviation,
+    has light-ideal,
+    has light-deviation,
+    has moisture-ideal,
+    has moisture-deviation,
+    has active-start-date,
+    has active-end-date;
