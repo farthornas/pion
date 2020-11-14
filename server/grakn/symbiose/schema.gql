@@ -37,6 +37,13 @@ define
   moisture-ideal sub moisture;
   moisture-deviation sub moisture;
 
+  in_bloom sub attribute,
+    value boolean;
+
+  self_polinatior sub attribute,
+    value boolean;
+
+
   polination sub relation,
     relates nectar,
     relates polinator;
@@ -53,6 +60,10 @@ define
     relates competitor,
     relates competed;
 
+  ecosystem sub relation,
+    relates inhabitant,
+    relates environment;
+
 
   plant sub entity,
     plays edible,
@@ -60,6 +71,7 @@ define
     plays nectar,
     plays competitor,
     plays competed,
+    plays inhabitant,
     has family,
     has latin-name,
     has local-name,
@@ -79,6 +91,9 @@ define
   animal sub entity,
     plays polinator,
     plays consumer,
+    plays competitor,
+    plays competed,
+    plays inhabitant,
     has family,
     has latin-name,
     has local-name,
@@ -92,3 +107,12 @@ define
     has moisture-deviation,
     has active-start-date,
     has active-end-date;
+
+  area sub entity,
+    plays environment,
+    has name,
+    has temperature,
+    has humidity,
+    has moisture,
+    has light,
+    has event-date;
