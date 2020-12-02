@@ -1,11 +1,12 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+import re
 
 # spoof to be allowed access to site
 USR = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safari/537.36'
 URL_norske = "http://norskeplanter.no/nedlasting-av-produktark/planteliste/"
-URL_gardenOrg = "https://garden.org/"
+URL_gardenOrg = "https://garden.org"
 PLNTS_NOR = "norwegian_plants.json"
 PLNTS = "plants.json"
 
@@ -40,7 +41,7 @@ def gardenOrg_search(plant_name):
     #plants = {}
     #plants_nor = None
     #p = {}
-    query = URL_gardenOrg + "search/index.php?q=" + plant_name.replace(" ", "+")
+    query = URL_gardenOrg + "/search/index.php?q=" + plant_name.replace(" ", "+")
     page = requests.get(query, headers={'User-agent':USR})
     soup = BeautifulSoup(page.content, "html.parser")
     plant_list = soup.tbody.find_all('a')
@@ -48,7 +49,7 @@ def gardenOrg_search(plant_name):
     for plant in plant_list:
         if "img alt" in str(plant):
             continue
-        print(plant)
+        #print(plant)
         plant = str(plant).split("\"")
         link, plant = plant[1], plant[1].split("/")[4].replace("-", " ")
         sub_species.append({plant:link})
@@ -65,13 +66,37 @@ def gardenOrg_search(plant_name):
 def growth_data(link):
     """Takes a link from the associated with the specific plant from the
     Garden org website and compiles the growth data into a list"""
-    
+    query = URL_gardenOrg + link
+    page = requests.get(query, headers={'User-agent':USR})
+    soup = BeautifulSoup(page.content, "html.parser")
+    regex_param = r"(?<=\>).*?(?=\<br/\>)"
+    #regex_value = r"(?<=\>).*?(?=\<b)"
+    details = soup.find_all(has_style)
+    print(details)
+    #print(soup.prettify())#, "Plant Habit"))#, "data-th"))#find_all("td"))
+    #print(details)
 
-    return 0
+    for idx, item in enumerate(details):
+        #print(item)
+        m = re.search(regex_param, str(item))
+        print(idx,m[0])
+        #matches_value = re.search(regex_value, str(item))
+        #if matches_param == None:
+        #    continue
+        #print(matches_param.group())
+        #print(matches_value.group())
+        #soup = BeautifulSoup(item, "html.parser")
+        #print(soup)
+
+def has_style(tag):
+    return tag.has_attr("data-th")# and tag.has_attr("style")
+
+    #return 0
 
     #plant_list = soup.tbody.find_all(re.compile("\d/([^/]*)"))
 
 #norske_planter(URL_norske)
-q_return = gardenOrg_search("Achillea millefolium")
+#q_return = gardenOrg_search("Achillea millefolium")
+growth_data("/plants/view/656623/Yarrow-Achillea-asplenifolia/")
 #gardenOrg_search("Verbascum nigrum")
-print(q_return)
+#print(q_return)
