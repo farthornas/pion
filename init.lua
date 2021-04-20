@@ -1,15 +1,15 @@
 local net, wifi, trig, now = net, wifi, gpio.trig, tmr.now
-local HOST, PORT = "jonriisnae", 1234
 local EUS_FILE = "wifi_param.lua"
 local TEST, DSLEEP = 4, 5
 local t0, t1, t2 = 0, 0, 0
 local data, shipment = {}, nil
 local BUTTON = 3 -- Flash button on D3
-local DURATION_FOR_START, DURATION_SLEEP = 4000000, 60000000 -- 4 seconds, dsleep duration
+local DURATION_FOR_START = 4000000 -- 4 seconds, dsleep duration
 local TIMEOUT_DSLEEP = 5000 -- If not connected by this time - deep sleep
 gpio.mode(BUTTON, gpio.INT, gpio.PULLUP)
 local _, reset_reason = node.bootreason()
 local data_sent = 0
+local HOST, PORT, NAME, LOCATION, DURATION_SLEEP, BURST_TRANSFER = dofile("config.lua")
 
 wifi.sta.connect()
 print("Reset reason: "..reset_reason)
@@ -35,7 +35,7 @@ local function pressed(level, t, eventcount)
         if t0 > DURATION_FOR_START then
             print("Button pressed for longer than "..DURATION_FOR_START)
             print("Starting data logging")      
-            send_to_sleep()
+            send_to_sleep(1000000)
         end
         print("Duration: "..t0)
         t1, t2, t0 = 0, 0, 0
@@ -50,13 +50,13 @@ wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, function(T)
     wifi.eventmon.unregister(wifi.eventmon.STA_GOT_IP)
     if file.exists("dsleepflag") then
         print("Deepsleep flag detected, proceeding with logging sequence") 
-        data["sensors"] = dofile("read_sensors.lua")
+        --data["sensors"] = dofile("read_sensors.lua")
         data["chip_info"] = node.info("hw")
         data["heap_space"] = node.heap()
         shipment = sjson.encode(data)
         print("Connecting to server...")
         srv = net.createConnection(net.TCP, 0)
-        send_to_sleep()
+        send_to_sleep(DURATION_SLEEP)
         srv:on("receive", function(sck, c) print(c) end)
         srv:on("connection", function(sck, c)
             print("Now connected")
@@ -109,14 +109,14 @@ function wifi_sta_setup()
     end
 end
 
-function send_to_sleep()
+function send_to_sleep(microsec)
     tmr.create():alarm(TIMEOUT_DSLEEP, tmr.ALARM_SINGLE, function()
         if data_sent ~= 1 and file.exists("dsleepflag") then
             print("Timeout on connecting to server")
             print("The data was not sent and will be lost...")
             print("Check if server is running...")
         end
-        print("Going to Sleep")
+        print("Going to Sleep for " .. microsec .. " us")
         if file.exists("dsleepflag") then
             print("dsleepflag already present")
         else
@@ -129,6 +129,29 @@ function send_to_sleep()
         --print("now rebooting to simulate dsleep")
         wifi.sta.disconnect()
         --node.restart()
-        node.dsleep(DURATION_SLEEP)
+        node.dsleep(microsec)
     end)
 end
+
+function sensor_readings_buffer()
+    local f = ""
+    if file.open("counter", "r") then
+        f = tonumber(file.readline())
+        file.close()
+    end
+    if file.open("counter", "w+") then
+        if f == "" then
+            file.writeline("1")
+        else
+            f = f + 1
+            file.writeline(f)
+        end
+        file.close()
+    end
+    if file.open("data_buffer", "a+") then
+        data["sensors"] = dofile("read_sensors.lua")
+        file.writeline(sjson.encode(data))
+        file.close()
+    end
+end
+        

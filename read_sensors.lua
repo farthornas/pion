@@ -3,8 +3,8 @@ local gpio, node, adc, tmr, sjson = gpio, node, adc, tmr, sjson
 local OUTPUT, INPUT, FLOAT, HIGH, LOW = gpio.OUTPUT, gpio.INPUT, gpio.FLOAT,gpio.HIGH, gpio.LOW
 local AUX_PWR_PIN, MOIST, SEL0, SEL1, SEL2, BUT = 1, 2, 7, 6, 5, 3 -- D1, D2, D7, D6, D5, D3 pins on nodeMCU (D3 flash button)
 local ON, OFF, HIGH_Z = 1, 0, 2 -- pin states
-local MSTR, LGT, BRDTMP, BAT = "soil_moisture", "ambient_light", "board_temperature", "battery_voltage" -- Sens value placeholders 
-local SENSDELAY = 100 -- sensor delay to allow aux turn on and change of MUX configuration 
+local MSTR, LGT, BRDTMP, BAT, SOILTMP = "soil_moisture", "ambient_light", "board_temperature", "battery_voltage", "soil_temperature" -- Sens value placeholders 
+local SENSDELAY = 200 -- sensor delay to allow aux turn on and change of MUX configuration 
 
 
 --local variables
@@ -35,6 +35,7 @@ local function read_adc(n)
     print("Reading "..n.." adc values.")
     for i = 1, 10 do
         m = adc.read(0)
+        print("Reading:"..m)
         values[i] = m
         sum = sum + m   
     end
@@ -75,8 +76,8 @@ local function moisture()
     set_gpio_conf({MOIST}, OUTPUT) -- configure pins for logic circuit operation
     print("Reading moisture sensor with polaity set: "..i..", 0 = top, 1 = bot")
     gpio.write(MOIST, i) -- set pin according to rand value (0 or 1)
-    local k = 1 % i -- complementary of what i is 
-    mux_select(0,0,k) -- select corresponding mux line.
+    --local k = 1 % i -- complementary of what i is 
+    mux_select(0,0,i) -- select corresponding mux line.
     moisture_reading = read_adc(10) -- read moisture sensor
     set_gpio_conf({SEL0, SEL1, SEL2, MOIST}, HIGH_Z) -- clean pin states
     print("Moisture reading finished")
@@ -89,7 +90,7 @@ local function alight()
     --Require aux_power to be on to opertate
     print("Setting up for ambient light reading...")
     local algt = {}
-    mux_select(0,1,0) -- sensor 7 = board temp sensor
+    mux_select(0,1,0) -- sensor 3 = light sensor
     print("Reading ambient lighting ...")
     algt = read_adc(10)
     set_gpio_conf({SEL0, SEL1, SEL2}, HIGH_Z) -- clean pin states
@@ -126,6 +127,20 @@ local function vbattery()
 end
 -- Battery voltage read END
 
+--Soil temperature START
+local function soil_temp()
+     --Require aux_power to be on to opertate
+    print("Setting up for soil temperature reading...")
+    local soil_temp = {}
+    mux_select(0,1,1) -- sensor 7 = board temp sensor
+    print("Reading soil temperature ...")
+    brd_temp = read_adc(10)
+    set_gpio_conf({SEL0, SEL1, SEL2}, HIGH_Z) -- clean pin states
+    print("Board soil temp reading finished")
+    return soil_temp
+end
+--Soil temperature END
+
 --  Read sensors 
 local function sens_read()
     --Returns the readings of the sensors in a json encoded format
@@ -134,6 +149,8 @@ local function sens_read()
     print("Aux power turned on")
     tmr.delay(SENSDELAY)
     readings[MSTR] = moisture()
+    tmr.delay(SENSDELAY)
+    readings[SOILTMP] = soil_temp()
     tmr.delay(SENSDELAY)
     readings[LGT] = alight()
     tmr.delay(SENSDELAY)
