@@ -40,7 +40,7 @@ class ForwardData(Protocol):
             #print(restruct[TIMESTAMP])
             #print(restruct)
             d = self.elastic.index('sandbox', id=restruct[TIMESTAMP], body=restruct)
-            res = es.get(index="sandbox", id=restruct[TIMESTAMP])
+            res = self.elastic.get(index="sandbox", id=restruct[TIMESTAMP])
             print(res['_source'])
 
         #received_data[TIMESTAMP] = int(time()*1000)
