@@ -39,7 +39,7 @@ class ForwardData(Protocol):
             restruct[TIMESTAMP] = timestamp - ((len(received_data["readings"]) - i)*received_data["device_info"]["sense_interval"])
             #print(restruct[TIMESTAMP])
             #print(restruct)
-            d = self.elastic.index('sandbox', id=timestamp, body=restruct)
+            d = self.elastic.index('sandbox', id=restruct[TIMESTAMP], body=restruct)
             print(d)
 
         #received_data[TIMESTAMP] = int(time()*1000)
