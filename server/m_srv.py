@@ -36,7 +36,7 @@ class ForwardData(Protocol):
             restruct = {}
             restruct["device_info"] = received_data["device_info"]
             restruct["readings"] = buffer["buffer{}".format(i)]
-            restruct[TIMESTAMP] = timestamp - ((len(received_data["readings"]) - i)*received_data["device_info"]["sense_interval"])
+            restruct[TIMESTAMP] = timestamp - ((len(received_data["readings"]) - i)*(received_data["device_info"]["sense_interval"]/1000) # subtract from timestamp the time between sensings 
             #print(restruct[TIMESTAMP])
             #print(restruct)
             d = self.elastic.index('sandbox', id=restruct[TIMESTAMP], body=restruct)
