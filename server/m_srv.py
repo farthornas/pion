@@ -14,8 +14,8 @@ TIMESTAMP = "date"
 class ForwardData(Protocol):
     """
     If issues with timestamp not being accepted by elastic as type date
-    the mapping probably has to be set manually: 
-    Use index mapping from: 
+    the mapping probably has to be set manually:
+    Use index mapping from:
     https://www.elastic.co/guide/en/elasticsearch/reference/current/date.html
     and then use the console dev tool to set it. the index will likely have to
     be deleted before setting the mapping.
@@ -31,9 +31,19 @@ class ForwardData(Protocol):
     def dataReceived(self, received_data):
         self.transport.write(b'Data is being handled\n')
         received_data = loads(received_data)
-        received_data[TIMESTAMP] = int(time()*1000)
-        print(received_data)
-        self.elastic.index('sandbox',received_data)
+        timestamp = int(time()*1000)
+        for i, buffer in enumerate(received_data["readings"], start=1):
+            restruct = {}
+            restruct["device_info"] = received_data["device_info"]
+            restruct["readings"] = buffer["buffer{}".format(i)]
+            restruct[TIMESTAMP] = timestamp - ((len(received_data["readings"]) - i)*received_data["device_info"]["sense_interval"])
+            print(restruct[TIMESTAMP])
+            #print(restruct)
+            #self.elastic.index('sandbox', restruct)
+
+        #received_data[TIMESTAMP] = int(time()*1000)
+        #print(received_data)
+        #self.elastic.index('sandbox',received_data)
         self.transport.loseConnection()
 
 class ForwardDataFactory(Factory):
