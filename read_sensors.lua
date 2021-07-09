@@ -134,7 +134,7 @@ local function soil_temp()
     local soil_temp = {}
     mux_select(0,1,1) -- sensor 7 = board temp sensor
     print("Reading soil temperature ...")
-    brd_temp = read_adc(10)
+    soil_temp = read_adc(10)
     set_gpio_conf({SEL0, SEL1, SEL2}, HIGH_Z) -- clean pin states
     print("Board soil temp reading finished")
     return soil_temp
