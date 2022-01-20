@@ -1,405 +1,347 @@
-<html>
+<html><head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WiFi Login</title>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		
+		html,
+		body {
+			height: 100%;
+			font-family: sans-serif;
+			text-align: center;
+			background: #444d44;
+		}
+		
+		#content {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			width: 320px;
+			height: 480px;
+			margin: auto;
+		}
+		
+		input,
+		button,
+		select {
+			-webkit-appearance: none;
+			border-radius: 0;
+		}
+		
+		fieldset {
+			border: 0;
+			box-shadow: 0 0 15px 1px rgba(0, 0, 0, .4);
+			box-sizing: border-box;
+			padding: 20px 30px;
+			background: #fff;
+			min-height: 320px;
+			margin: -1px;
+		}
+		
+		input {
+			border: 1px solid #ccc;
+			margin-bottom: 10px;
+			width: 100%;
+			box-sizing: border-box;
+			color: #222;
+			font: 16px monospace;
+			padding: 15px;
+		}
+		
+		select {
+			font: 16px monospace;
+			background-color: transparent;
+			padding: 15px;
+		}
+		
+		button {
+			color: #fff;
+			border: 0;
+			border-radius: 3px;
+			cursor: pointer;
+			display: block;
+			font: 16px sans-serif;
+			text-decoration: none;
+			padding: 10px 5px;
+			background: #31b457;
+			width: 100%;
+		}
+		
+		button:focus,
+		button:hover {
+			box-shadow: 0 0 0 2px #fff, 0 0 0 3px #31b457;
+		}
+		
+		h3 {
+			font-size: 16px;
+			color: #666;
+			margin-bottom: 20px;
+		}
+		
+		h4 {
+			color: #ccc;
+			padding: 10px;
+		}
+		
+		.utility {
+			float: right;
+			clear: both;
+			max-width: 75%;
+			font-size: 13px;
+			color: #222;
+			margin: 10px 0;
+			padding: 5px 10px;
+			background: #ccc;
+		}
+		
+		.utility:focus,
+		.utility:hover {
+			box-shadow: 0 0 0 2px #fff, 0 0 0 3px #ccc;
+		}
+		
+		#dropdown,
+		#f2,
+		#f3,
+		#bk2 {
+			display: none;
+		}
+		
+		#dropdown {
+			position: relative;
+			width: 100%;
+			overflow: auto;
+			height: 51px;
+			margin-bottom: 10px;
+		}
+		
+		#aplist {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			border: 1px solid #ccc;
+			font-family: monospace;
+			padding: 10px 5px;
+		}
+		
+		#arrow {
+			color: #888;
+			position: absolute;
+			right: 8px;
+			top: 15px;
+		}
+		
+		#i {
+			text-align: center;
+		}
+	</style>
+</head>
 
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WiFi Login</title>
-    <style type="text/css">
-      * {
-        margin: 0;
-        padding: 0;
-      }
+<body>
+	<div id="content">
+		<fieldset>
+			<div id="deviceId">Device: 28AD55</div>
+			<div id="f1">
+				<h3>Connect device to your Wi-Fi</h3>
+				<form action="/setwifi" method="POST">
+					<button id="networks" type="button" class="utility">Manual Entry</button>
+					<div id="dropdown" style="display: block;">
+						<span id="arrow">▼</span>
+						<select id="aplist" name="aplist"><option>Select a Network...</option><option data-auth="3">SSE Broadband F73FD3</option><option data-auth="3">TALKTALK28B911</option><option data-auth="3">SKY263E6</option><option data-auth="3">TALKTALKC8FAB2</option></select>
+					</div>
+					<input id="ssid" name="wifi_ssid" type="text" autocorrect="off" autocapitalize="none" placeholder="Wi-Fi Name" style="display: none;">
+					<input id="wifi_password" name="wifi_password" type="password" autocorrect="off" autocapitalize="none" autocomplete="off" placeholder="Password" required="">
+					<input id="plant_location" name="plant_location" type="text" autocorrect="off" autocapitalize="none" placeholder="Location (House/Garden/Greenhouse etc)">
+					<input id="plant_name" name="plant_name" type="text" autocorrect="off" autocapitalize="none" placeholder="Plant ID (Tomatoes/Peas/Rocket  etc)">
+					<input id="update_freq" name="update_freq" type="number" autocorrect="off" autocapitalize="none" placeholder="Update Frequency (minutes)">
+					<input id="m_buffer" name="m_buffer" type="number" autocorrect="off" autocapitalize="none" placeholder="Sensor samples pr update">
+					<!-- JONAS You can add inputs here and have them pop up in your lua code through the file eus_params.lua -->
+					<input type="submit" value="Save">
+				</form>
+			</div>
+			<div id="f2">
+				<h1>Success!</h1>
+				<div id="i">
+					<h3>Your device has successfully connected to the Wi-Fi network.<br><br>You may now close this web page.</h3>
+				</div>
+			</div>
+			<div id="f3">
+				<h2>Trying...</h2>
+				<button id="bk2" type="button" class="utility">Go Back to Wi-Fi Setup</button>
+			</div>
+		</fieldset>
+		<h4 id="st">Awaiting Status (0)</h4>
+	</div>
+	<script>
+		var $ = function (selector) { return document.querySelector(selector); };
+		var ab = $('#networks'), ap = $('#aplist');
+		var stopAll = false, ra, rs, submitted = false;
 
-      html,
-      body {
-        height: 100%;
-        font-family: sans-serif;
-        text-align: center;
-        background: #a6ffac;
-      }
+		$.urlParam = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+			if (results == null) { return null;}
+			else { return decodeURI(results[1]) || 0;}
+		}
+		function show(f, y) {
+			if (y == null) y = f;
+			$(f).style.display = y == f ? 'block' : 'none';
+		}
+		function hide(f) {
+			$(f).style.display = 'none';
+		}
+		function to(cb, x) {
+			return setTimeout(cb, 1000 * x);
+		}
+		function refr() {
+			if (!stopAll)
+				fetch('/status.json?n=' + Math.random(), 'GET', newSt, 2);
+		}
+		function cur(f) {
+			show('#f1', f);
+			show('#f2', f);
+			show('#f3', f);
+		}
+		function newSt(s, d) {
+			clearTimeout(rs);
+			rs = to(refr, 3);
 
-      #content {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: 410px;
-        height: 420px;
-        margin: auto;
-        color: #ccc;
-      }
+			if (s != 200) {
+				$('#st').innerText = 'Awaiting Status (' + s + ')';
+			} else {
+				if (typeof d === 'string') {
+					d = JSON.parse(d);
+				}
 
-      input,
-      button,
-      select {
-        -webkit-appearance: none;
-        border-radius: 0;
-      }
+				$('#deviceId').innerText = "Device: " + d.deviceid;
 
-      fieldset {
-        border: 0;
-        box-shadow: 0 0 15px 1px rgba(0, 0, 0, .4);
-        box-sizing: border-box;
-        padding: 20px 30px;
-        background: #e6ffe6;
-        min-height: 320px;
-        margin: -1px;
-      }
+				var c = d.pairing;
 
-      input {
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        width: 100%;
-        box-sizing: border-box;
-        color: #222;
-        font: 15px monospace;
-        padding: 15px;
-      }
+				var st = [
+					'Idle',
+					'Connecting...',
+					'Failed - wrong password',
+					'Failed - network not found',
+					'Failed',
+					'Wi-Fi successfully connected!'
+				][d.status];
 
-      select {
-        font: 16px monospace;
-        background-color: transparent;
-        padding: 15px;
-      }
+				if (st == null)
+					st = "";
 
-      button {
-        color: #ccc;
-        border: 0;
-        border-radius: 3px;
-        cursor: pointer;
-        display: block;
-        font: 16px sans-serif;
-        text-decoration: none;
-        padding: 10px 5px;
-        background: #ccc;
-        width: 100%;
-      }
+				if (!submitted && d.status > 1 && d.status < 5)
+					st = "Need a valid Network and Password";
 
-      button:focus,
-      button:hover {
-        box-shadow: 0 0 0 2px #fff, 0 0 0 3px #ccc;
-      }
+				$('#st').innerText = st;
 
-      h3 {
-        font-size: 16px;
-        color: #ccc;
-        margin-bottom: 20px;
-      }
+				if (d.status === 5) {
+					cur('#f2');
+					stopAll = true;
+					clearTimeout(ra);
+				} else if (d.status > 1) {
+					cur('#f1');
+				}
+			}
+		}
+		function fetch(url, method, callback, time_out) {
+			var xhr = new XMLHttpRequest();
+			xhr.onloadend = function () {
+				callback(xhr.status, xhr.responseText);
+			}
+			xhr.ontimeout = function () {
+				callback(-1, null);
+			}
+			xhr.open(method, url, true);
+			xhr.setRequestHeader('Accept', 'application/json');
+			xhr.timeout = (time_out || 10) * 1000;
+			xhr.send();
+		}
+		function gotAp(s, json) {
+                  var list;
+                  if (s === 200 && json != null) {
+                    if (typeof json === 'string' && json.length > 0) {
+                      list = JSON.parse(json);
+                    } else if (typeof json === 'object') {
+                      list = json;
+                    }
 
-      h4 {
-        color: #ccc;
-        padding: 10px;
-      }
-
-      .utility {
-        float: right;
-        clear: both;
-        max-width: 75%;
-        font-size: 15px;
-        color: #ccc;
-        margin: 10px 0;
-        padding: 5px 10px;
-        background: #008000;
-      }
-
-      .utility:focus,
-      .utility:hover {
-        box-shadow: 0 0 0 2px #fff, 0 0 0 3px #ccc;
-      }
-
-      #dropdown,
-      #f2,
-      #f3,
-      #bk2 {
-        display: none;
-      }
-
-      #dropdown {
-        position: relative;
-        width: 100%;
-        overflow: auto;
-        height: 51px;
-        margin-bottom: 10px;
-      }
-
-      #aplist {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        border: 1px solid #ccc;
-        font-family: monospace;
-        padding: 10px 5px;
-      }
-
-      #arrow {
-        color: #ccc;
-        position: absolute;
-        right: 8px;
-        top: 15px;
-      }
-
-      #i {
-        text-align: center;
-      }
-
-    </style>
-  </head>
-
-  <body>
-    <div id="content">
-      <fieldset>
-        <div id="deviceId">Device: 28AD55</div>
-        <div id="f1">
-          <h3>Connect Pion to your Wi-Fi</h3>
-          <form action="/setwifi" method="POST">
-            <button id="networks" type="button" class="utility">Manual Entry</button>
-            <div id="dropdown" style="display: block;">
-              <span id="arrow">▼</span>
-              <select id="aplist" name="aplist">
-                <option>Select a Network...</option>
-                <option data-auth="3">SSE Broadband F73FD3</option>
-                <option data-auth="3">SKY263E6</option>
-                <option data-auth="3">TALKTALK3F3D09</option>
-              </select>
-            </div>
-            <input id="ssid" name="wifi_ssid" type="text" autocorrect="off" autocapitalize="none" placeholder="Wi-Fi Name" style="display: none;">
-            <input id="wifi_password" name="wifi_password" type="password" autocorrect="off" autocapitalize="none" autocomplete="off" placeholder="Password" required="">
-            <input id="server" name="server" type="text" autocorrect="off" autocapitalize="none" autocomplete="off" placeholder="Server" required="">
-            <input id="plant_location" name="plant_location" type="text" autocorrect="off" autocapitalize="none" placeholder="Location (House/Garden/Greenhouse etc)">
-            <input id="plant_name" name="plant_name" type="text" autocorrect="off" autocapitalize="none" placeholder="Plant ID (Tomatoes/Peas/Rocket  etc)">
-            <input id="report_period" name="report_period" type="number" autocorrect="off" autocapitalize="none" placeholder="Sample Period (hours)">
-            <input id="m_buffer" name="m_buffer" type="number" autocorrect="off" autocapitalize="none" placeholder="Samples pr report (2/4/6 etc)">
-            <!-- You can add inputs here and have them pop up in your lua code through the file eus_params.lua -->
-            <input type="submit" value="Save">
-          </form>
-        </div>
-        <div id="f2">
-          <h1>Success!</h1>
-          <div id="i">
-            <h3>Your device has successfully connected to the Wi-Fi network.<br><br>You may now close this web page.</h3>
-          </div>
-        </div>
-        <div id="f3">
-          <h2>Trying...</h2>
-          <button id="bk2" type="button" class="utility">Go Back to Wi-Fi Setup</button>
-        </div>
-      </fieldset>
-      <h4 id="st">Idle</h4>
-    </div>
-    <script>
-      var $ = function(selector) {
-        return document.querySelector(selector);
-      };
-      var ab = $('#networks'),
-        ap = $('#aplist');
-      var stopAll = false,
-        ra, rs, submitted = false;
-
-      $.urlParam = function(name) {
-        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results == null) {
-          return null;
-        } else {
-          return decodeURI(results[1]) || 0;
-        }
-      }
-
-      function show(f, y) {
-        if (y == null) y = f;
-        $(f).style.display = y == f ? 'block' : 'none';
-      }
-
-      function hide(f) {
-        $(f).style.display = 'none';
-      }
-
-      function to(cb, x) {
-        return setTimeout(cb, 1000 * x);
-      }
-
-      function refr() {
-        if (!stopAll)
-          fetch('/status.json?n=' + Math.random(), 'GET', newSt, 2);
-      }
-
-      function cur(f) {
-        show('#f1', f);
-        show('#f2', f);
-        show('#f3', f);
-      }
-
-      function newSt(s, d) {
-        clearTimeout(rs);
-        rs = to(refr, 3);
-
-        if (s != 200) {
-          $('#st').innerText = 'Awaiting Status (' + s + ')';
-        } else {
-          if (typeof d === 'string') {
-            d = JSON.parse(d);
-          }
-
-          $('#deviceId').innerText = "Device: " + d.deviceid;
-
-          var c = d.pairing;
-
-          var st = [
-            'Idle',
-            'Connecting...',
-            'Failed - wrong password',
-            'Failed - network not found',
-            'Failed',
-            'Wi-Fi successfully connected!'
-          ][d.status];
-
-          if (st == null)
-            st = "";
-
-          if (!submitted && d.status > 1 && d.status < 5)
-            st = "Need a valid Network and Password";
-
-          $('#st').innerText = st;
-
-          if (d.status === 5) {
-            cur('#f2');
-            stopAll = true;
-            clearTimeout(ra);
-          } else if (d.status > 1) {
-            cur('#f1');
-          }
-        }
-      }
-
-      function fetch(url, method, callback, time_out) {
-        var xhr = new XMLHttpRequest();
-        xhr.onloadend = function() {
-          callback(xhr.status, xhr.responseText);
-        }
-        xhr.ontimeout = function() {
-          callback(-1, null);
-        }
-        xhr.open(method, url, true);
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.timeout = (time_out || 10) * 1000;
-        xhr.send();
-      }
-
-      function gotAp(s, json) {
-        var list;
-        if (s === 200 && json != null) {
-          if (typeof json === 'string' && json.length > 0) {
-            list = JSON.parse(json);
-          } else if (typeof json === 'object') {
-            list = json;
-          }
-
-          list.sort(function(a, b) {
-            return b.rssi - a.rssi;
-          });
-          var ops = '<option>Select a Network...</option>';
-          var seen = {};
-          for (var i = 0; i < list.length; ++i) {
-            var ssid = list[i].ssid;
-            if (!seen[ssid]) {
-              seen[ssid] = 1;
-              ops += '<option data-auth=' + list[i].auth + '>' +
-                ssid.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;") + '</option>';
-            }
-          }
-          ap.innerHTML = ops;
-          ab.disabled = false;
-          togAp(null, true);
-          ab.onclick = togAp;
-        } else {
-          ab.innerText = 'No networks found (' + s + ')';
-          ra = to(refrAp, 5);
-        }
-      }
-
-      function togAp(ev, force) {
-        if (!force || ap.style.display == 'block') {
-          hide('#dropdown');
-          show('#ssid');
-          ab.innerText = 'Scan for Networks';
-          ab.onclick = refrAp;
-        } else {
-          show('#dropdown');
-          hide('#ssid');
-          ab.innerText = 'Manual Entry';
-        }
-        let pw = $('#wifi_password');
-        pw.placeholder = "Password";
-        pw.disabled = false;
-        pw.required = true;
-      }
-
-      function refrAp() {
-        ab.innerText = 'Searching for networks...';
-        ab.disabled = true;
-        ap.innerHTML = '<option disabled>Scanning...</option>';
-        if (!stopAll)
-          fetch('/aplist?n=' + Math.random(), 'GET', gotAp, 10);
-      }
-      window.onload = function() {
-        let trying = $.urlParam('trying');
-        ab.innerText = 'Scan for Networks';
-        ab.onclick = refrAp;
-        $('#aplist').onchange = function() {
-          $('#ssid').value = $('#aplist').value;
-          let pw = $('#wifi_password');
-          if ($('#aplist').selectedOptions[0].dataset.auth > 0) {
-            pw.placeholder = "Password";
-            pw.disabled = false;
-            pw.required = true;
-          } else {
-            pw.placeholder = "Open -- no password";
-            pw.disabled = true;
-            pw.required = false;
-          }
-        };
-        $('#bk2').onclick = function() {
-          cur('#f1')
-        }
-        rs = to(refr, 0.5);
-        if (trying) cur("#f3");
-        refrAp();
-      }
-
-    </script>
+                    list.sort(function (a, b) {
+                      return b.rssi - a.rssi;
+                    });
+                    var ops = '<option>Select a Network...</option>';
+                    var seen = {};
+                    for (var i = 0; i < list.length; ++i) {
+                      var ssid = list[i].ssid;
+                      if (!seen[ssid]) {
+                          seen[ssid] = 1;
+                          ops += '<option data-auth=' + list[i].auth + '>' + 
+                            ssid.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;") + '</option>';
+                      }
+                    }
+                    ap.innerHTML = ops;
+                    ab.disabled = false;
+                    togAp(null, true);
+                    ab.onclick = togAp;
+                  } else {
+                    ab.innerText = 'No networks found (' + s + ')';
+                    ra = to(refrAp, 5);
+                  }
+		}
+		function togAp(ev, force) {
+			if (!force || ap.style.display == 'block') {
+                          hide('#dropdown');
+                          show('#ssid');
+                          ab.innerText = 'Scan for Networks';
+                          ab.onclick = refrAp;
+			} else {
+                          show('#dropdown');
+                          hide('#ssid');
+                          ab.innerText = 'Manual Entry';
+			}
+                        let pw = $('#wifi_password');
+                        pw.placeholder = "Password";
+                        pw.disabled = false;
+                        pw.required = true;
+		}
+		function refrAp() {
+			ab.innerText = 'Searching for networks...';
+			ab.disabled = true;
+			ap.innerHTML = '<option disabled>Scanning...</option>';
+			if (!stopAll)
+				fetch('/aplist?n=' + Math.random(), 'GET', gotAp, 10);
+		}
+		window.onload = function() {
+			let trying = $.urlParam('trying');
+			ab.innerText = 'Scan for Networks';
+			ab.onclick = refrAp;
+			$('#aplist').onchange = function () {
+                          $('#ssid').value = $('#aplist').value;
+                          let pw = $('#wifi_password');
+                          if ($('#aplist').selectedOptions[0].dataset.auth > 0) {
+                            pw.placeholder = "Password";
+                            pw.disabled = false;
+                            pw.required = true;
+                          } else {
+                            pw.placeholder = "Open -- no password";
+                            pw.disabled = true;
+                            pw.required = false;
+                          }
+			};
+			$('#bk2').onclick = function () {
+				cur('#f1')
+			}
+			rs = to(refr, 0.5);
+			if( trying ) cur("#f3");
+                        refrAp();
+		}
+  </script>
 
 
 
-    <script>
-      mendeleyWebImporter = {
-        downloadPdfs(t) {
-          return this._call('downloadPdfs', [t]);
-        },
-        open() {
-          return this._call('open', []);
-        },
-        _call(methodName, methodArgs) {
-          const id = Math.random();
-          window.postMessage({
-            id,
-            token: '0.7366573075509342',
-            methodName,
-            methodArgs
-          }, 'http://nodemcu.portal');
-          return new Promise(resolve => {
-            const listener = window.addEventListener('message', event => {
-              const data = event.data;
-              if (typeof data !== 'object' || !('result' in data) || data.id !== id) return;
-              window.removeEventListener('message', listener);
-              resolve(data.result);
-            });
-          });
-        }
-      };
-
-    </script>
-  </body>
-
-</html>
+</body></html>
