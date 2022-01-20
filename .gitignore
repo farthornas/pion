@@ -1,3 +1,4 @@
-server/grakn/grakn_tutorials
+server
+FW
 *_test.lua
 eus_params.lua
