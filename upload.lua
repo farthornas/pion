@@ -22,7 +22,7 @@ local function upload()
     local tnow, _, _  = rtctime.get()
     local tstamp = 0
     local url = 'https://europe-west1-1.gcp.cloud2.influxdata.com/api/v2/write?org=f56e703feef94052&bucket=demo&precision=s'
-    local headers = 'Authorization: Token YS22siytEM-K4iNFWOkWx4ITfpvuvgK_rwLDFVM235W7ceJ1frWoaQM7Qjagt3j7cyqHPNQntEE4iWVmpQvodA==\r\nContent-Type: text/plain; charset=utf-8\r\nAccept: application/json'
+    local headers = 'Authorization: Token PUT_YOUR_TOKEN==\r\nContent-Type: text/plain; charset=utf-8\r\nAccept: application/json'
     local body = ""
     if file.open("buffer") then
         for i = 1, buffer_count do
